@@ -137,7 +137,7 @@ Además, el color de los puntos individuales muestra cuándo se realizó la obse
 
 
 
-```{r}
+```{r fig.width=5, fig.height=5}
 inpshift <- pol$lobster
 inpshift$timeC <- inpshift$timeC + 0.3 #April
 inpshift$timeI <- inpshift$timeI + 0.8 #August
@@ -329,19 +329,31 @@ class(brotula)
 
 
 Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos di´ra que tan robusta es la estimación
-```{r}
+```{r fig.width=5, fig.height=5}
 plotspict.data(brotula)
+```
+
+
+```{r fig.width=5, fig.height=5}
 plotspict.ci(brotula)
 ```
 ahora aplico el modelo
 ```{r}
 resbro <- fit.spict(brotula)
+```
+
+
+```{r fig.width=6, fig.height=6}
 plot(resbro)
+```
+
+
+```{r fig.width=6, fig.height=6}
 plotspict.bbmsy(resbro)
 plotspict.ffmsy(resbro)
 plotspict.biomass(resbro, ylim=c(0, 800000))
 
-plotspict.fb(resbro, ylim=c(0, 0.6), xlim=c(0, 100000))
+plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
 
 ```
 #diagnostico y residuos
@@ -350,20 +362,51 @@ plotspict.fb(resbro, ylim=c(0, 0.6), xlim=c(0, 100000))
 resbrod <- calc.osa.resid(resbro)
 plotspict.diagnostic(resbrod)
 ```
+
+
 ### Extrear parametros estimados
+```{r}
+resbro1 <- retro(resbro, nretroyear = 4)
+plotspict.retro(resbro1)
+```
 
 Lo primero es ver los  estimados en una lista
 
 ```{r}
-list.quantities(resbro)
+list.quantities(resbro1)
 ```
 
 Ahora los saco por separado
 ```{r}
-get.par('MSY', resbro)
+get.par('Bmsy', resbro)
 ```
 
 
+```{r}
+capture.output(summary(resbro))
+```
+
+Tambien se pueden usar mas indices que incorporaremos despues. Otro aspeto que se puede trabajar es datos estacionales
+
+
+```{r}
+resbro2 <- manage(resbro)
+```
+
+
+```{r}
+df <- mansummary(resbro2)
+```
+
+Ploteo de escenarios
+
+```{r}
+par(mfrow=c(2, 2), mar=c(4, 4.5, 3, 3.5))
+plotspict.bbmsy(resbro2)
+plotspict.ffmsy(resbro2, qlegend=FALSE)
+plotspict.catch(resbro2, qlegend=FALSE)
+plotspict.fb(resbro2, man.legend=FALSE)
+```
 
 
 

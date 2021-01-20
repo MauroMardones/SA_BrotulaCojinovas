@@ -42,7 +42,7 @@ Alert to any bugs or issues by using GitHub. Suggestions and comments for additi
 
 In this folder you need put two files, .tpl and .dat to run LBPA estimation model 
 
-```{r echo=FALSE, eval=TRUE}
+```{r echo=FALSE, eval=FALSE}
 rm(list=ls(all=TRUE))  # Borra todas los objetos creados
 setwd('~/IFOP/CBA/BROTULA_COJINOVA/2021/LBPA')
 ```
@@ -123,7 +123,7 @@ Lets plot length structure from data and get a plot from all length set data ava
 
 
 ```{r eval=FALSE, echo=FALSE, fig.align="center", fig.cap= "Set of Length data with model fit"}
-par(mfrow=c(3,3),mar=c(3,4,1,1)+1)
+par(mfrow=c(4,3),mar=c(3,4,1,1)+1)
 for(i in 1:23){
     plot(BinLen, ObsFre[i,],type="s", xlab="mm.", ylab="Lenght Density") 
     lines(BinLen, PredFre, type="l", col=2)
