@@ -179,7 +179,7 @@ Mat         <- (data$Age_Length_s.e_N_Catch_Selectivity_F_Weight_Maturity[,9])
 ```
 
 
-```{r ,  fig.cap="Variables used in LBPA estimation model", fig.height=8}
+```{r ,  fig.cap="Variables used in LBPA estimation model", fig.height=4, fig.width=4}
 l <- ggplot(data=NULL, aes(x=age))+
   geom_line(aes(y = Length))+
   scale_x_continuous(breaks = seq(from = 0, to = 10, by = 1))+
@@ -231,7 +231,7 @@ MaLength <- data$Selectivity_and_maturity_at_length [2,]
 ```
 
 
-```{r fig.cap="Maturity and Selectivity at Length", fig.height=4}
+```{r fig.cap="Maturity and Selectivity at Length", fig.height=2, fig.width=3}
 SeMaLe <- ggplot(data=NULL, aes(x=BinLen))+
   geom_line(aes(y = SeLength, colour = 'Selectivity'),  size = 1)+
   geom_line(aes(y = MaLength, colour = 'Maturity'), linetype = 2, size = 1)+
@@ -262,7 +262,7 @@ L3 <- (data$Length_frequency_of_exploitable_population_current_target_unfished[3
 ```
 
 
-```{r echo=FALSE, fig.cap="Outputs of different relative Length estimated in LBPA" }
+```{r echo=FALSE, fig.cap="Outputs of different relative Length estimated in LBPA", fig.height=2, fig.width=3 }
 L123 <- ggplot(data=NULL, aes(x=BinLen))+
   geom_line(aes(y = L1, colour = 'Current'),  size = 1)+
   geom_line(aes(y = L2, colour = 'Target'), size = 1)+
@@ -308,7 +308,7 @@ YPR1 <- YPR %>%
 
 YPR Plot with PBR estimated in LBPA model
 
-```{r  fig.cap="Yield and Spawning Biomass-per-recruit as a function of fishing mortality" }
+```{r  fig.height=2, fig.width=3, fig.cap="Yield and Spawning Biomass-per-recruit as a function of fishing mortality" }
 ypr <- ggplot(data=YPR1, aes(x=YPR[,1]))+
    geom_line(aes(y = YPR1$RSSB, colour = 'YPR'))+
    geom_line(aes(y = YPR1$R, colour = 'SPR'))+
@@ -320,9 +320,9 @@ ypr <- ggplot(data=YPR1, aes(x=YPR[,1]))+
                       breaks = c('YPR', 'SPR')) +
    scale_linetype_manual(name = "PBR", values = c(3, 2), 
                       guide = guide_legend(override.aes = list(color = c('black','black'))))+
-   scale_x_continuous(breaks = seq(from = 0, to = 1.4, by = 0.1))+
+   scale_x_continuous(breaks = seq(from = 0, to = 15, by = 1))+
    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1))+
-   geom_text(x=1, y=0.7, label="F/F Target = 1.48")+
+   geom_text(x=2, y=0.7, label="F/F Target = 0.263")+
    ylab('SPR, YPR') + xlab('Fishing Mortality') +
    theme_light()
 ypr

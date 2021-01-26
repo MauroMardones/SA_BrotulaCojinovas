@@ -318,7 +318,23 @@ Puedo tener un .txt ó un .csv pero deben ser transformados en formato lista.
 
 ```{r}
 brotula <- read.table("data_brotula.txt", sep="", header = T)
+
+#un plot simple de indice y desembarque
 ```
+
+
+```{r, fig.width=3, fig.height=2}
+bro <- ggplot(brotula,aes(timeC,obsC))+ 
+  geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8200) +  
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_continuous(breaks = seq(from = 1978, to = 2020, by = 2))
+bro
+```
+
 
 Convierto los datos como lista para ser lidos por las fiunciones del SPiCT
 ```{r}
@@ -329,12 +345,12 @@ class(brotula)
 
 
 Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos di´ra que tan robusta es la estimación
-```{r fig.width=5, fig.height=5}
+```{r fig.width=3, fig.height=3}
 plotspict.data(brotula)
 ```
 
 
-```{r fig.width=5, fig.height=5}
+```{r fig.width=3, fig.height=4}
 plotspict.ci(brotula)
 ```
 ahora aplico el modelo
@@ -343,12 +359,12 @@ resbro <- fit.spict(brotula)
 ```
 
 
-```{r fig.width=6, fig.height=6}
+```{r fig.width=4, fig.height=3}
 plot(resbro)
 ```
 
 
-```{r fig.width=6, fig.height=6}
+```{r fig.width=4, fig.height=3}
 plotspict.bbmsy(resbro)
 plotspict.ffmsy(resbro)
 plotspict.biomass(resbro, ylim=c(0, 800000))
@@ -378,7 +394,7 @@ list.quantities(resbro1)
 
 Ahora los saco por separado
 ```{r}
-get.par('Bmsy', resbro)
+get.par('MSY', resbro)
 ```
 
 
@@ -401,11 +417,10 @@ df <- mansummary(resbro2)
 Ploteo de escenarios
 
 ```{r}
-par(mfrow=c(2, 2), mar=c(4, 4.5, 3, 3.5))
 plotspict.bbmsy(resbro2)
-plotspict.ffmsy(resbro2, qlegend=FALSE)
-plotspict.catch(resbro2, qlegend=FALSE)
-plotspict.fb(resbro2, man.legend=FALSE)
+plotspict.ffmsy(resbro2)
+plotspict.catch(resbro2)
+plotspict.fb(resbro2)
 ```
 
 
@@ -419,6 +434,20 @@ Puedo tener un .txt ó un .csv pero deben ser transformados en formato list.
 cojmo <- read.table("data_CojiMot.txt", sep="", header = T)
 ```
 
+
+```{r, fig.width=3, fig.height=2}
+com <- ggplot(cojmo,aes(timeC,obsC))+ 
+  geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8200) +  
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_continuous(breaks = seq(from = 1978, to = 2020, by = 2))
+com
+```
+
+
 Convierto los datos como lista para ser lidos por las fiunciones del SPiCT
 ```{r}
 cojmo <- as.list(cojmo)
@@ -428,14 +457,13 @@ class(cojmo)
 
 
 Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos di´ra que tan robusta es la estimación
-```{r}
-plotspict.data(cojmo)
+```{r fig.width=3, fig.height=4}
 plotspict.ci(cojmo)
 ```
 
 ahora aplico el modelo
-```{r}
-rescojmo <- fit.spict(cojmo)
+```{r fig.width=4, fig.height=3}
+#rescojmo <- fit.spict(cojmo)
 plot(rescojmo)
 ```
 
@@ -455,6 +483,39 @@ plotspict.production(rescojmo)
 Ahora los saco por separado
 ```{r}
 get.par('MSY', rescojmo)
+```
+
+```{r}
+capture.output(summary(rescojmo))
+```
+
+
+### Extrear parametros estimados
+```{r}
+rescom1 <- retro(rescojmo, nretroyear = 4)
+plotspict.retro(rescom1)
+```
+
+
+
+```{r}
+rescom2 <- manage(rescojmo)
+```
+
+
+
+
+```{r}
+df <- mansummary(rescom2)
+```
+
+Ploteo de escenarios
+
+```{r}
+plotspict.bbmsy(rescom2)
+plotspict.ffmsy(rescom2)
+plotspict.catch(rescom2)
+plotspict.fb(rescom2)
 ```
 
 ## analisis futuros
