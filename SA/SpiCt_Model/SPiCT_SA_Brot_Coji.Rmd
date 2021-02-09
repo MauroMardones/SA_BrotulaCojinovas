@@ -1,33 +1,10 @@
 ---
-title: "Guia para uso de Stochastic Production Model in Continuous Time (SPiCT) (Pedersen et al., 2017)"
-author: "M. Mardones & MJ. Zúñiga"
+title: "Aplicación de Stochastic Production Model in Continuous Time (SPiCT) (Pedersen et al., 2017) en brótula y cojinoba moteada"
+author: "Mardones, M., Zúñiga, MJ., Pérez, MC"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 bibliography: Documents.bib
 toc: TRUE
-
-
-header-includes:
-- \usepackage{fancyhdr}
-- \usepackage{graphicx}
-- \usepackage{parskip}
-- \pagestyle{fancy}
-- \usepackage{geometry}
-- \geometry{top=1.5cm, bottom=1cm, left=2.5cm, right=2.5cm}
-- \renewcommand{\familydefault}{\sfdefault}
-
-- \newcommand{\sietepuntos}{\fontsize{7pt}{\baselineskip}\selectfont}
-- \newcommand{\cincopuntos}{\fontsize{6pt}{\baselineskip}\selectfont}
-
-- \addtolength{\headheight}{4.5\baselineskip}
-- \setlength{\headheight}{70pt}
-- \setlength{\footskip}{5pt}
-- \setlength{\textheight}{658pt}
-- \fancyhead[CO,CE]{\includegraphics[height=1.5cm]{logoifop.png}\\ \sietepuntos INSTITUTO DE FOMENTO PESQUERO / DIVISION INVESTIGACION PESQUERA}
-- \fancyhead[LO,LE]{}
-- \fancyhead[RO,RE]{}
-- \renewcommand{\headrulewidth}{0.5pt}
-- \fancyfoot[C]{\cincopuntos \thepage \\ \vspace{-0.2cm} ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ \\ \vspace{-0.1cm} Documento Peer Review. Analisis exploratorio y preparación Datos Talla Erizo Sur de Chile 2020}  
   
 ---
 
@@ -100,6 +77,7 @@ library(devtools)
 library(ellipse)
 library(spict) #comprobar esta versión de spict_v1.2.8
 library(tidyverse)
+library(patchwork)
 ```
 
 ## Trabajo con datos de ejemplo, plots e interpretación de outputs.
@@ -317,7 +295,7 @@ Usaré el ejemplop de datos de erizo de la zona X Norte. Este ejemplo no tiene m
 Puedo tener un .txt ó un .csv pero deben ser transformados en formato lista.
 
 ```{r}
-brotula <- read.table("data_brotula.txt", sep="", header = T)
+brotula <- read.table("data_brotula2.txt", sep="", header = T)
 
 #un plot simple de indice y desembarque
 ```
@@ -365,16 +343,17 @@ plot(resbro)
 
 
 ```{r fig.width=4, fig.height=3}
-plotspict.bbmsy(resbro)
-plotspict.ffmsy(resbro)
-plotspict.biomass(resbro, ylim=c(0, 800000))
-
-plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
-
+a <-plotspict.bbmsy(resbro)
+#b <-  plotspict.ffmsy(resbro)
+b<- plotspict.biomass(resbro, ylim=c(0, 200000))
+#d <-  plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
+plotspict.production(resbro)
+c <- plotspict.f(resbro)
+a/b/c
 ```
 #diagnostico y residuos
 
-```{r eval=FALSE}
+```{r fig.width=3, fig.height=5}
 resbrod <- calc.osa.resid(resbro)
 plotspict.diagnostic(resbrod)
 ```
@@ -411,7 +390,7 @@ resbro2 <- manage(resbro)
 
 
 ```{r}
-df <- mansummary(resbro2)
+mansummary(resbro2)
 ```
 
 Ploteo de escenarios
@@ -431,7 +410,7 @@ plotspict.fb(resbro2)
 Puedo tener un .txt ó un .csv pero deben ser transformados en formato list.
 
 ```{r}
-cojmo <- read.table("data_CojiMot.txt", sep="", header = T)
+cojmo <- read.table("data_CojiMot2.txt", sep="", header = T)
 ```
 
 
@@ -461,10 +440,20 @@ Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos di
 plotspict.ci(cojmo)
 ```
 
-ahora aplico el modelo
+Ahora aplico el modelo
+```{r}
+rescojmo <- fit.spict(cojmo)
+```
+
 ```{r fig.width=4, fig.height=3}
-#rescojmo <- fit.spict(cojmo)
-plot(rescojmo)
+par(mfrow=c(2, 2))
+a <-plotspict.bbmsy(rescojmo)
+#b <-  plotspict.ffmsy(resbro)
+c <- plotspict.biomass(rescojmo, ylim=c(0, 200000))
+#d <-  plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
+plotspict.production(rescojmo)
+plotspict.f(rescojmo)
+
 ```
 
 ```{r}
