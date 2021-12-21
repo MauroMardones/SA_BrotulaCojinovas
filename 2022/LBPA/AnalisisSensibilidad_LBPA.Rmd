@@ -1,0 +1,375 @@
+---
+title: "AnalisisSensibilidad"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(patchwork)
+library(knitr)
+library(egg)
+```
+
+
+Análisis de sensibilidad de la mortalidad natural 
+
+
+```{r, warning=FALSE, eval=FALSE, echo=TRUE}
+system('~/admb-12.2/admb LBPA')
+system('./LBPA')
+```
+
+```{r echo=FALSE, eval=TRUE}
+#source('~/IFOP/Escritos/LBPA/LBPA_Guide/read.admb.R')
+source(paste(getwd(),'/read.admb.R',sep=""))
+```
+
+```{r echo=TRUE, eval=TRUE, message=FALSE}
+data <-read.rep('LBPA.rep')
+```
+
+```{r}
+dat <- readLines("lbpa.dat",encoding="UTF-8")
+dat2<-dat
+
+M <- c(seq(0.1,0.38,0.02),0.24)
+
+par<-as.numeric(strsplit(dat[3],"\t")[[1]])
+par[3]
+
+for(i in 1:length(M)){
+dat2[3]<-paste(60.400,  0.250,  M[i], -7.825,  2.950, 43.500, 53.000,  0.875,sep="\t")
+
+cat(dat2,file=(can<-file("lbpa.dat","wb",encoding="UTF-8")),sep="\n")
+close(can)
+
+system('./LBPA')
+
+rep<-readLines("LBPA.rep",encoding="UTF-8")
+cat(rep,file=(can<-file(paste("LBPA",i,".rep",sep=""),"wb",encoding="UTF-8")),sep="\n")
+close(can)
+}
+
+
+```
+
+
+```{r}
+
+tabla <- matrix(ncol=7,nrow=16)
+
+for(i in 1:16){
+data <-read.rep(paste('LBPA',i,'.rep',sep=""))
+tabla[i,] <-  round(data$F_L50_slope_a0_cv_Lr_Ftar,2)
+}
+
+tablafin<-cbind(M,tabla)
+colnames(tablafin) <- c("M","F_Current", "L50", "Slope", "a0", "cv", "Lr", "F_Target")
+kable(tablafin)
+
+
+
+```
+Ahora genero un plot de correlaciòn entre M y F. Si bien hay una dependecia a las variables, es necesario mirar esta data
+```{r fig.height=2, fig.width=4}
+tablafin2 <- as.data.frame(tablafin)
+
+cor1 <- ggplot(tablafin2, aes(x=M, y=F_Current)) + 
+  geom_point(stat = 'identity' , colour='#fc4e2a', fill='#fc4e2a', alpha=.3, size=2) +
+  stat_smooth(method = loess, se = FALSE, span = 0.3)+
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.03))+
+  scale_y_continuous(breaks = seq(from = 1, to = 2, by = 0.01))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+  #facet_wrap(.~month, ncol =  5)+
+  ylim(1,2)+
+  ylab('F actual')+
+  xlab('M')
+
+cor2 <- ggplot(tablafin2, aes(x=M, y=F_Target)) + 
+  geom_point(stat = 'identity' , colour='#fc4e2a', fill='#fc4e2a', alpha=.3, size=2) +
+  stat_smooth(method = loess, se = FALSE, span = 0.3)+
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.03))+
+  scale_y_continuous(breaks = seq(from = 0, to = 2, by = 0.01))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+  #facet_wrap(.~month, ncol =  5)+
+  ylim(0,2)+
+  ylab('F Objetivo')+
+  xlab('M')
+
+cor1|cor2
+```
+
+
+
+
+
+
+
+
+
+```{r}
+age      <- seq(1,10) #this age depend of your specie
+BinLen   <- data$Length_bins
+NObsFre  <- length(data$Observed_frequencies[,1]) #this numbers of observations depend of the own data
+ObsFre   <- data$Observed_frequencies
+PredFre  <- data$Predicted_frequency 
+CatchLFre<- data$Catch_length_frequency 
+ProbLen  <- data$Probability_of_length
+Nage     <- length(data$Probability_of_length[,1])
+```
+
+
+```{r}
+L1 <- matrix(NA,nrow=16,ncol=28)
+L2 <- matrix(NA,nrow=16,ncol=28)
+L3 <- matrix(NA,nrow=16,ncol=28)
+for(i in 1:16){
+data <-read.rep(paste('LBPA',i,'.rep',sep=""))
+L1[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[1,])
+L2[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[2,])
+L3[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[3,])
+}
+
+L1<-data.frame(L1)
+L2<-data.frame(L2)
+L3<-data.frame(L3)
+
+```
+
+```{r}
+
+L1 <- matrix(NA,nrow=16,ncol=28)
+L2 <- matrix(NA,nrow=16,ncol=28)
+L3 <- matrix(NA,nrow=16,ncol=28)
+for(i in 1:16){
+data <-read.rep(paste('LBPA',i,'.rep',sep=""))
+L1[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[1,])
+L2[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[2,])
+L3[i,] <- (data$Length_frequency_of_exploitable_population_current_target_unfished[3,])
+}
+
+L1a<-data.frame(cbind(BinLen, t(L1)))
+L2a<-data.frame(cbind(BinLen, t(L2)))
+L3a<-data.frame(cbind(BinLen, t(L3)))
+
+m1 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,2],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,2],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,2],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.1',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m2 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,3],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,3],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,3],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.12',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m3 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,4],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,4],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,4],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.14',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m4 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,5],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,5],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,5],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.16',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m5 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,6],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,6],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,6],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.18',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m6 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,7],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,7],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,7],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.18',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m7 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,8],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,8],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,8],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.20',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m8 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,9],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,9],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,9],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.22',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m9 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,10],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,10],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,10],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.24',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m10 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,11],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,11],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,11],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.26',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m11 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,12],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,12],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,12],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.28',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m12 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,13],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,13],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,13],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.30',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m13 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,14],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,14],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,14],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.32',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m14 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,15],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,15],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,15],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.34',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m15 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,16],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,16],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,16],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.36',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+m16 <- ggplot()+
+  geom_line(data=L1a, aes(y = L1a[,17],x=BinLen, colour = 'Current'),  size = 1)+
+  geom_line(data=L2a, aes(y = L2a[,17],x=BinLen, colour = 'Target'), size = 1)+
+  geom_line(data=L3a, aes(y = L3a[,17],x=BinLen, colour = 'Unfished'), size = 1)+
+  scale_color_manual(name = '',
+                     values = c('red1', 'gold2', 'green'),
+                     limits = c('Current', 'Target','Unfished'),
+                     breaks = c('Current', 'Target','Unfished')) +
+  ylab('') + xlab('') +
+  annotate('text', x = 40, y = 0.2, label = 'M=0.38',size = 10)+
+  theme_bw()+
+  theme(legend.position ="none")
+
+
+```
+
+
+```{r fig.height=7, fig.width=7 }
+finalplot <- ggarrange(m1, m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,
+                    ncol = 4, nrow = 4)
+```
+
