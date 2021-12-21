@@ -1,0 +1,348 @@
+---
+title: "Aplicación de Stochastic Production Model in Continuous Time (SPiCT) (Pedersen et al., 2017) en brótula y cojinoba moteada"
+author: "Mardones, M., Zúñiga, MJ., Pérez, MC"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+bibliography: Documents.bib
+toc: TRUE
+---
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "  ", fig.align = 'center', cache=FALSE)
+library(knitr)
+```
+
+\pagebreak
+
+
+## Breve descripción del keystone paper (Pedersen & Berg, 2016)
+
+Este documento provee una guía (casi traducida de Pedersen et al.,2017) para el uso del modelo de producción estatocastico contrinuo en tiempo (SPiCT) y que está dividido en tres partes 
+
+Este es un documento vivo que estará en permanente cambio.  Todos los avances y actualizaciones  pueden ser seguidas y obtenidas de https://github.com/DTUAqua/spict/commits/master. El SPiCT packahe esta siendo activamente actualizado y se pueden reportar errores aquí: https://github.com/DTUAqua/spict/releases.
+
+
+
+El modelo de excedente de producción tiene una larga historia como método para manejar las poblaciones de peces con datos limitados. Los avances recientes han arrojado modelos de producción excedente como modelos de espacio de estado que separan la variabilidad aleatoria de la dinámica del stock del error en los índices observados de biomasa. Pedersen & Berg (2016) presentan un modelo de producción excedente estocástico
+en tiempo continuo (SPiCT), que además de la dinámica del stock también modela la dinámica de las pesquerías. Esto permite que el error en el proceso de captura se refleje en la incertidumbre de los parámetros estimados del modelo y las cantidades de manejo.
+
+
+La formulación del modelo de espacio de estado de tiempo continuo incluye la capacidad de proporcionar estimaciones de biomasa explotable y mortalidad por pesca en cualquier momento a partir de datos muestreados a intervalos arbitrarios y posiblemente irregulares. 
+
+Esta guía es un ejemplo de applicación del modelo con los datos de la librería y también propone utilizar datos propios.
+
+\pagebreak
+
+## Principales supuestos y requerimiento de datospara SPiCT.
+
+- Serie de tiempo en dato que contenga cambios forzantes en la población
+
+- Contraste en los datos (Hilborn & Walters, 1989)
+
+-Extreme observations or outliers in index and catch are commonly encountered problem in fisheries data (Chen et al. 1994).
+
+\pagebreak
+
+## Carga de librerias necesarias.
+
+Lo primero es cargar TMB usando el GitHub usando devtools Package. Aqui se explica como; (https://github.com/kaskr/adcomp/wiki/Download)
+
+
+```{r  eval=FALSE}
+install.packages("devtools")
+install.packages("TMB")
+#si hay problemas, instalarlo desde el github
+devtools::install_github("kaskr/adcomp", subdir = "TMB")
+```
+
+Una vez cargado eso se llama de la misma forma al SPiCT package
+
+```{r eval=FALSE, echo = TRUE, warning = FALSE, message = FALSE}
+devtools::install_github("DTUAqua/spict/spict")
+#devtools::install_github("DTUAqua/spict/spict", ref = "1.2.8")
+# aqui algunas dependencias tambien necesitan ser instaladas
+install.packages("Rcpp")
+install.packages("ellipse")
+```
+
+Aqui a veces hay problemas para acceder a GitHub por problemas en las credenciales. Para ello se debe obtener un token de GitHub (deben tener una cuenta) y hacer un proceso como lo planteado acá: https://www.r-bloggers.com/using-travis-make-sure-you-use-a-github-pat/
+
+
+Una vez solucianando e instalnando dependencias, llamamos las librerias:
+
+```{r eval=TRUE, echo = TRUE, warning = FALSE, message = FALSE}
+library(usethis)
+library(devtools)
+library(ellipse)
+library(spict) #comprobar esta versión de spict_v1.2.8
+library(tidyverse)
+library(patchwork)
+```
+
+\pagebreak
+## Main assumptions and input data for SPiCT
+
+- Catch data should be representative of both landings and bycatch. It is also
+possible to use landings only, but then the interpretation of the results
+changes. If available, seasonal catches should be used as input. Catches are
+assumed to be taken over a time interval (e.g. years or quarters), thus the
+associated time vector in SPiCT `inp$timeC` should reflect the beginning of each
+catch interval (e.g. 2002.25 and 2002.75 for the second and fourth quarter
+catches, respectively). Additionally, the vector `inp$dtc` should reflect the
+length of each time interval (e.g. 1 for annual and 0.25 for quarterly catches,
+respectively).
+
+- Stock size indices should be in terms of biomass (not numbers) and
+representative of the part of the stock vulnerable to the commercial fleets, the
+so called exploitable stock biomass (ESB). In many cases, the gear selectivity
+of the commercial and scientific fleets do not coincide and thus the stock size
+indices have to be corrected to exclude individuals that are not represented in
+the commercial fleets.
+
+- Biomass indices are assumed to be snapshots at given points in time.
+Therefore, the timing of survey indices `inp$timeI` has to be given as decimal
+years reflecting the timing of the survey (e.g. 1995.5 for the middle of the
+year). The timing of the survey will be matched to the closest model time which
+is dependent on `inp$dteuler` (see below). Commercial CPUE index should be
+associated with the midpoint of the interval of the corresponding catches, i.e.
+middle of the year if they are based on yearly aggregated catches and effort.
+
+\pagebreak
+## Incorporando la propia data
+
+
+Leo el directorio donde contengo los datos
+```{r}
+setwd('~/IFOP/CBA/BROTULA_COJINOVA/2022/SAM')
+```
+
+Usaré el ejemplop de datos de erizo de la zona X Norte. Este ejemplo no tiene mucho contraste de datos y veremos los problemas que ello acarrea.
+
+Puedo tener un .txt ó un .csv pero deben ser transformados en formato lista.
+
+```{r}
+brotula <- read.table("data_brotula2.txt", sep="", header = T)
+
+#un plot simple de indice y desembarque
+```
+
+
+```{r, fig.width=3, fig.height=2}
+bro <- ggplot(brotula,aes(timeC,obsC))+ 
+  geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8200) +  
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_continuous(breaks = seq(from = 1978, to = 2021, by = 2))
+bro
+```
+
+
+Convierto los datos como lista para ser lidos por las fiunciones del SPiCT
+```{r}
+brotula <- as.list(brotula)
+#compruebo
+class(brotula)
+```
+
+Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos dirá que tan robusta es la estimación
+
+```{r eval=F, fig.width=3, fig.height=3}
+plotspict.data(brotula)
+```
+
+
+
+```{r fig.width=3, fig.height=4}
+plotspict.ci(brotula)
+```
+
+
+ahora aplico el modelo
+```{r }
+resbro <- fit.spict(brotula)
+```
+
+
+```{r fig.width=4, fig.height=3}
+plot(resbro)
+```
+
+
+```{r fig.width=4, fig.height=3}
+a <-plotspict.bbmsy(resbro)
+#b <-  plotspict.ffmsy(resbro)
+b<- plotspict.biomass(resbro, ylim=c(0, 500000))
+#d <-  plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
+plotspict.production(resbro)
+c <- plotspict.f(resbro)
+a/b/c
+```
+#diagnostico y residuos
+
+```{r fig.width=3, fig.height=5}
+resbrod <- calc.osa.resid(resbro)
+plotspict.diagnostic(resbrod)
+```
+
+
+### Extrear parametros estimados
+```{r}
+resbro1 <- retro(resbro, nretroyear = 4)
+plotspict.retro(resbro1)
+```
+
+Lo primero es ver los  estimados en una lista
+
+```{r}
+list.quantities(resbro1)
+```
+
+Ahora los saco por separado
+```{r}
+get.par('MSY', resbro)
+```
+
+
+```{r}
+capture.output(summary(resbro))
+```
+
+Tambien se pueden usar mas indices que incorporaremos despues. Otro aspeto que se puede trabajar es datos estacionales
+
+
+```{r }
+resbro2 <- manage(resbro)
+```
+
+
+```{r}
+mansummary(resbro2)
+```
+
+Ploteo de escenarios
+
+```{r}
+plotspict.bbmsy(resbro2)
+plotspict.ffmsy(resbro2)
+plotspict.catch(resbro2)
+plotspict.fb(resbro2)
+```
+
+
+
+
+### Cojinoba moteada
+
+Puedo tener un .txt ó un .csv pero deben ser transformados en formato list.
+
+```{r}
+cojmo <- read.table("data_CojiMot2.txt", sep="", header = T)
+```
+
+
+```{r, fig.width=3, fig.height=2}
+com <- ggplot(cojmo,aes(timeC,obsC))+ 
+  geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8200) +  
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_continuous(breaks = seq(from = 1978, to = 2021, by = 1))
+com
+```
+
+
+Convierto los datos como lista para ser lidos por las fiunciones del SPiCT
+```{r}
+cojmo <- as.list(cojmo)
+#compruebo
+class(cojmo)
+```
+
+
+Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos di´ra que tan robusta es la estimación
+```{r fig.width=3, fig.height=4}
+plotspict.ci(cojmo)
+```
+
+Ahora aplico el modelo
+```{r }
+rescojmo <- fit.spict(cojmo)
+```
+
+```{r eval=FALSE, fig.width=4, fig.height=3}
+par(mfrow=c(2, 2))
+a <-plotspict.bbmsy(rescojmo)
+#b <-  plotspict.ffmsy(resbro)
+c <- plotspict.biomass(rescojmo, ylim=c(0, 200000))
+#d <-  plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
+plotspict.production(rescojmo)
+plotspict.f(rescojmo)
+
+```
+
+```{r}
+plotspict.biomass(rescojmo)
+plotspict.catch(rescojmo)
+plotspict.f(rescojmo)
+plotspict.diagnostic(rescojmo)
+plotspict.fb(rescojmo)
+plotspict.bbmsy(rescojmo)
+plotspict.production(rescojmo)
+
+
+```
+
+
+Ahora los saco por separado
+```{r}
+get.par('MSY', rescojmo)
+```
+
+```{r}
+capture.output(summary(rescojmo))
+```
+
+
+### Extrear parametros estimados
+```{r}
+rescom1 <- retro(rescojmo, nretroyear = 4)
+plotspict.retro(rescom1)
+```
+
+
+
+```{r }
+rescom2 <- manage(rescojmo)
+```
+
+
+
+
+```{r}
+df <- mansummary(rescom2)
+```
+
+Ploteo de escenarios
+
+```{r}
+plotspict.bbmsy(rescom2)
+plotspict.ffmsy(rescom2)
+plotspict.catch(rescom2)
+plotspict.fb(rescom2)
+```
+
+## analisis futuros
+
+- Como se estima F, m.?
+
+- Como se condicionan las priors?
+
+- predicciones. Identificar condiciones sobre las cuales se generan, por ejemplo, capturas, F , B, etc.
+
+- Identificar claramente los escenarios por default
+
