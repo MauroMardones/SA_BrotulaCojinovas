@@ -1,0 +1,803 @@
+---
+title: "Analisis exploratorio y preparacion de Est de Tallas Brtula y Cojinova para su evaluación de stock X y XI"
+subtitle: "CBA ASIPA 2022"
+author: "Mauricio Mardones I"
+date: "18-05-2020"
+output: pdf_document
+toc: TRUE
+---
+
+\pagebreak
+
+### Analisis explorratorio y preparación de estructuras de tallas para la evaluación de stock
+
+En este documento se presentan las rutas de análisis exploratorio de estructuras de tallas paracada una de las zonas de evaluación de stock de brotulas y cojinovas de la zona sur austral lleva a cabo el Departamento de Evaluación de Recursos.
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+
+library(hrbrthemes)
+library(tidyverse)
+library(ggjoy)
+library(readxl)
+
+```
+
+\pagebreak
+
+## Exploración de datos totales
+
+Los datos se actualizan año a año y se van estructurando las estructuras de tallas para cada zona de evaluación
+
+Jessica Santader actualizó los datos de 2021
+
+```{r eval=FALSE}
+talla <- read_xlsx("LONGITUD2021.xlsx")
+
+#visualizo la estructura y dimension de la base de los datos
+
+head(talla)
+dim(talla)
+names(talla)
+glimpse(talla)
+
+```
+
+Ahora cambio los formatos de las fechas, el primer analisis es anual, por ende no considero los meses ni años y elijo fecha de zarpe
+
+```{r}
+realdate <- as.Date(talla$FECHA_HORA_ZARPE, format="%Y-%M-%D")
+
+talladate <- data.frame(FECHA_HORA_ZARPE=realdate)
+year=as.numeric(format(realdate,"%Y"))
+month=as.numeric (format(realdate,"%M"))
+day=as.numeric (format(realdate,"%D"))
+
+talla2<-cbind(talladate,day,month,year,talla)
+tail(talla2)
+summary(talla2)
+table(talla2$year)
+table(talla2$FECHA_LANCE)
+glimpse(talla2)
+
+```
+
+Ahora transformo las coordenadas
+
+```{r}
+talla2$LONGITUD
+talla2$LONGITUD/10000
+floor(talla2$LONGITUD/10000)
+gr<-floor(talla2$LONGITUD/10000)
+talla2$LONGITUD-gr*10000
+(talla2$LONGITUD-gr*10000)/100
+mn<-(talla2$LONGITUD-gr*10000)/100
+talla2$LONGITUD-gr*10000-mn*100
+sg<-talla2$LONGITUD-gr*10000-mn*100
+talla2$long<-gr+mn/60+sg/(60*60)
+talla2$long<-talla2$long*-1
+long <- talla2$long
+
+talla2$LATITUD
+talla2$LATITUD/10000
+floor(talla2$LATITUD/10000)
+gr<-floor(talla2$LATITUD/10000)
+talla2$LATITUD-gr*10000
+(talla2$LATITUD-gr*10000)/100
+mn<-(talla2$LATITUD-gr*10000)/100
+talla2$LATITUD-gr*10000-mn*100
+sg<-talla2$LATITUD-gr*10000-mn*100
+talla2$lat<-gr+mn/60+sg/(60*60)
+talla2$lat<-talla2$lat*-1
+lat<- talla2$lat
+
+#junto la data
+talla3<- cbind(talla2, lat, long)
+names(talla3)
+head(talla3)
+glimpse(talla3)
+
+#algo ocurre que debo sacar las 2 ultimas columnas
+
+talla3 <- subset(talla3, select=-c(51,52))
+
+
+```
+
+
+
+Ahora selecciono los recursos para extrear los datos de tallas considerando la tabla;
+
+
+
+| Código | Código                                   | Nombre Científico   |
+|--------|------------------------------------------|---------------------|
+| 41     | COJINOBA VIOLEACEA                       | Seriolella violacea |
+| 94     | COJINOBA POROSA	                        | Seriolella porosa   |
+| 29     | COJINOBA AZUL;COJINOBA DEL SUR;MOTEADA   | Seriolella punctata |
+| 96     | AUSTRAL;COJINOBA DEL SUR;PLOMA           | Seriolella caerulea |
+| 5      | BACALAO CRIOLLO;BROTOLA;RENACUAJO DE MAR | Salilota australis  |
+
+: Codigo de Recursos
+
+Nosotros utilizamos el 5 (brotula), 96 (Cojinoba del Sur), 29 (Cojinoba Moteada)
+
+
+
+\pagebreak
+
+## Extraigo datos por recurso
+
+
+### 5, Brótulas
+
+Filtro especie y sexos indeterminados
+
+```{r}
+tallabr <- talla3 %>% 
+  filter(COD_ESPECIE == 5) %>% 
+  filter(SEXO %in% c("1", "2")) %>% 
+   filter(LONGITUD_MUESTRA < 100)
+```
+
+
+\pagebreak
+
+## Expansión de tallas para todos los registros. Esto demora un poco.
+
+
+Ahora se genera la expansion de tallas a la frecuencia para obtener los vectores por año y por zona.
+
+Identifico las columnas de trabajo. elijo pocas variables para hacer el proceso mas rapido.
+
+```{r}
+
+names(tallabr)
+dftalla3<-subset(tallabr,select=c(4,46, 45, 47))
+names(dftalla3)
+dim(dftalla3)
+colnames(dftalla3) <- c( "ANO"  ,   "SEXO",     "TALLA",    "FRECUENCIA")
+dftalla3 <- transform(dftalla3, TALLA = as.numeric(TALLA), 
+               FRECUENCIA = as.numeric(FRECUENCIA))
+dftalla3 <- na.omit(dftalla3)
+dim(dftalla3)
+
+#ver tallas grandes
+# hist y max
+
+```
+
+
+Identifico los puertos de la base
+
+```{r}
+#table(dftalla5$PROC)
+unique(dftalla3$PUERTO_RECALADA)
+```
+
+Ahora una expansión de las tallas
+
+
+```{r}
+#expandir long a fracuencias
+#esto no lo pude hacer para el total dado q es mucha data
+expanav<-dftalla3
+#puerto, ano, long, Frec
+head(expanav)
+
+filas<-nrow(expanav)
+
+aux<-list();auxA<-list();auxB<-list()
+for(i in 1:filas){
+  aux[[i]]<-rep(expanav[i,3],expanav[i,4])
+  auxA[[i]]<-rep(expanav[i,2],expanav[i,4])
+  auxB[[i]]<-rep(expanav[i,1],expanav[i,4])
+  
+}
+
+
+length(aux)
+length(auxA)
+length(auxB)
+#aux<-as.numeric(aux)
+```
+
+```{r}
+Long<-unlist(aux)
+Sex<-unlist(auxA)
+Year<-unlist(auxB)
+#Puerto<-unlist(auxB);Puerto
+tt<-cbind(Long,Sex, Year)
+colnames(tt)<-c("Long","Sex", "Year")
+dim(tt)
+head(tt)
+tt <-as.data.frame(tt)
+tt$Long <- as.numeric(as.character(tt$Long))
+tt$Year <- as.numeric(as.character(tt$Year))
+glimpse(tt)
+```
+
+\pagebreak
+
+# Comparaciòn de serie historica de las series
+
+Un boxplot total de tallas medias por años y por poligono
+
+El dataframe de toda la serie con poligonos es *dftalla5*
+
+```{r warning=F, message=F, fig.height=7, fig.width=5}
+p1 <- ggplot(tt, aes(x=Year, y=Long, group=Year)) + 
+    geom_violin(show.legend = NA)+
+    stat_summary(fun.x=median, geom="point", size=2, color="black")+
+    #scale_fill_viridis_c(alpha=0.6, option = "inferno") +
+    #geom_jitter(size=0.1, alpha=0.01) +
+    facet_wrap(.~Sex, ncol=5)+
+    theme_ipsum() +
+    geom_hline(yintercept = 47.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Tallas medias Brotula') +
+    ylab('Longitud (cm.)')+
+    xlab('')
+p1
+
+```
+
+
+```{r, fig.width=3, fig.height=4}
+nb2 <- ggplot(tt , aes(x=Long, y = as.factor(Year), colour=Sex, fill=Sex))  +
+  geom_joy( alpha=0.5) + 
+  #facet_wrap(.~Sex, ncol=5) +   
+  geom_vline(xintercept = 47.7, color = "red")+
+  scale_x_discrete(breaks = seq(from = 20, to = 90, by = 10))+
+  scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme_bw()+
+  xlim(20,90)+
+  xlab("Longitud (cm.)")+
+  ylab("")
+  #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
+
+nb2
+```
+
+
+Boxplot por todos los años
+
+```{r fig.align="center", fig.height=4, fig.width=3}
+n <-ggplot(data=tt, aes(x=Year, y=Long, group=Year, fill=Year)) +
+    geom_boxplot( show.legend = FALSE) +
+    scale_fill_viridis_c(alpha=0.6) +
+    #geom_jitter(size=0.4, alpha=0.2) +
+    #facet_wrap(.~POLIGONO, ncol = 3)+
+    theme_bw() +
+    geom_hline(yintercept = 47.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Boxplot de tallas medias Brótula') +
+    ylab('Longitud (Cm.)')+
+    xlab('Años')+
+    coord_flip()
+n
+```
+
+Con este plot compruebo que son igual a las tallas q no se expandieron.
+
+```{r fig.align="center", fig.width=8, fig.height=6}
+pexp <- ggplot(tt, aes(Long)) +
+  geom_histogram(binwidth = 2,  colour = "blue", alpha=0.4) +
+  facet_wrap(.~Year, scales = "free_y", ncol=4) +
+  xlim(10,100)+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()
+pexp
+```
+
+\pagebreak
+
+## Prepara los vectores para sumar a los .dat del modelo si los necesito.
+
+# Brotula
+
+```{r}
+tt$cat_long <- as.numeric(as.character(cut(x = tt$Long, breaks = seq(10,108,2), 
+                                                  labels = seq(10,106,2), right = FALSE)))
+ttbro <- table(tt$Year, tt$cat_long)
+
+tail(ttbro, 10)
+
+# A su vez puedo generar el archivo por separado
+write.csv(ttbro, "TALLA_BRO_2021.csv", sep = ",", row.names = TRUE)
+
+tallabrot <- read.csv2("TALLA_BRO_2021.csv", sep=",")
+
+head(tallabrot)
+tail(tallabrot)
+```
+
+\pagebreak
+
+## Extraigo datos por recurso
+
+
+### 96 Cojinoba del Sur
+
+Filtro especie y sexos indeterminados
+
+```{r}
+tallacojs <- talla3 %>% 
+  filter(COD_ESPECIE == 96) %>% 
+  filter(SEXO %in% c("1", "2"))
+```
+
+
+
+```{r fig.align="center", fig.width=6, fig.height=5}
+pcs <- ggplot(tallacojs, aes(LONGITUD_MUESTRA, fill=SEXO)) +
+  geom_histogram(binwidth = 3, alpha=0.4) +
+  facet_wrap(.~year, scales = "free_y", ncol=4) +
+  xlim(10,100)+
+  theme_bw()
+pcs + geom_vline(xintercept = 37.5, color = "red")
+```
+
+Estructura de tallas por año por puerto
+```{r fig.height=8,fig.width=9,fig.align="center", warning=FALSE, message=F}
+
+js <- ggplot(data=tallacojs, aes(x=LONGITUD_MUESTRA, y = as.factor(year)))  +
+  geom_joy(alpha=0.5) + 
+  facet_wrap(~COD_PESQUERIA, ncol=6) +   
+  labs(x="Longitud (mm)", y="Frecuencia absoluta (N?)")+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()+
+  xlim(10,100)+
+  scale_y_discrete((limits = rev(levels(tallabr$year))))+
+  theme(strip.text.x = element_text(size = 10))
+js
+```
+Otro tema que debo identificar es el componente espacial. Aqui saco las tallas por ID de Cuadricula. Cada cuadricula debe tener un punto georefreenciado que despues puedo pasar a mapas.
+
+
+```{r fig.height=6,fig.width=6,fig.align="center", warning=F, message=F}
+
+jcs <- ggplot(data=tallacojs, aes(x=LONGITUD_MUESTRA, y = as.factor(year)))  +
+  geom_joy(alpha=0.5) + 
+  facet_wrap(~ID_CUADRICULA, ncol=10) +   
+  labs(x="Longitud (Cm)", y="Frecuencia absoluta (N?)")+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()+
+  xlim(10,100)+
+  scale_y_discrete((limits = rev(levels(tallabr$year))))+
+  theme(strip.text.x = element_text(size = 10))
+jcs 
+```
+
+Ahora voy a sacar tallas medias por año y por cuadricula para graficar.
+
+```{r, fig.align="center"}
+meancuacs <-tallacojs %>% 
+  group_by(ID_CUADRICULA, year) %>%
+  summarise(avg=mean(LONGITUD_MUESTRA))
+head(meancuacs)
+dim(meancuacs)
+```
+
+```{r, fig.align="center"}
+mns<-ggplot(meancuacs, aes(year, ID_CUADRICULA, size=avg, fill= avg))+
+    geom_point(alpha=0.5, shape=21, show.legend = T) +
+    scale_size(range = c(-7,10)) +
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    #scale_y_continuous(breaks = seq(from = 1, to = 13, by = 1))+
+    guides(fill = guide_legend(reverse=F))+
+    theme_bw()+ 
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ylab("") +
+    xlab("") 
+mns
+```
+
+\pagebreak
+
+## Expansión de tallas para todos los registros. Esto demora un poco.
+
+
+Ahora se genera la expansion de tallas a la frecuencia para obtener los vectores por año y por zona.
+
+Identifico las columnas de trabajo. elijo pocas variables para hacer el proceso mas rapido.
+
+```{r}
+
+names(tallacojs)
+dftalla4<-subset(tallacojs,select=c(4,46, 45, 47))
+names(dftalla4)
+dim(dftalla4)
+colnames(dftalla4) <- c( "ANO"  ,   "SEXO",     "TALLA",    "FRECUENCIA")
+dftalla4 <- transform(dftalla4, TALLA = as.numeric(TALLA), 
+               FRECUENCIA = as.numeric(FRECUENCIA))
+dftalla4 <- na.omit(dftalla4)
+dim(dftalla4)
+
+#ver tallas grandes
+# hist y max
+
+```
+
+
+Identifico los puertos de la base
+
+```{r}
+#table(dftalla4$PROC)
+unique(dftalla4$PUERTO_RECALADA)
+```
+
+Ahora una expansión de las tallas
+
+
+```{r}
+#expandir long a fracuencias
+#esto no lo pude hacer para el total dado q es mucha data
+expanav<-dftalla4
+#puerto, ano, long, Frec
+head(expanav)
+
+filas<-nrow(expanav)
+
+aux<-list();auxA<-list();auxB<-list()
+for(i in 1:filas){
+  aux[[i]]<-rep(expanav[i,3],expanav[i,4])
+  auxA[[i]]<-rep(expanav[i,2],expanav[i,4])
+  auxB[[i]]<-rep(expanav[i,1],expanav[i,4])
+  
+}
+
+
+length(aux)
+length(auxA)
+length(auxB)
+#aux<-as.numeric(aux)
+```
+
+```{r}
+Long<-unlist(aux)
+Sex<-unlist(auxA)
+Year<-unlist(auxB)
+#Puerto<-unlist(auxB);Puerto
+tts<-cbind(Long,Sex, Year)
+colnames(tts)<-c("Long","Sex", "Year")
+dim(tts)
+head(tts)
+tts <-as.data.frame(tts)
+tts$Long <- as.numeric(as.character(tts$Long))
+tts$Year <- as.numeric(as.character(tts$Year))
+glimpse(tts)
+```
+
+\pagebreak
+
+# Comparaciòn de serie historica de las series
+
+Un boxplot total de tallas medias por años y por puerto
+
+El dataframe de toda la serie con poligonos es *dftalla5*
+
+```{r warning=F, message=F, fig.height=4, fig.width=5}
+pcs <- ggplot(tts, aes(x=Year, y=Long, group=Year)) + 
+    geom_violin(show.legend = NA)+
+    stat_summary(fun.x=median, geom="point", size=2, color="black")+
+    #scale_fill_viridis_c(alpha=0.6, option = "inferno") +
+    #geom_jitter(size=0.1, alpha=0.01) +
+    facet_wrap(.~Sex, ncol=5)+
+    theme_ipsum() +
+    geom_hline(yintercept = 35.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Tallas medias Cojinoba del Sur') +
+    ylab('Longitud (cm.)')+
+    xlab('')
+pcs
+
+```
+
+Boxplot por todos los años
+
+```{r fig.align="center", fig.height=4, fig.width=3}
+ncs <-ggplot(data=tts, aes(x=Year, y=Long, group=Year, fill=Year)) +
+    geom_boxplot( show.legend = FALSE) +
+    scale_fill_viridis_c(alpha=0.6) +
+    #geom_jitter(size=0.4, alpha=0.2) +
+    #facet_wrap(.~POLIGONO, ncol = 3)+
+    theme_bw() +
+    geom_hline(yintercept = 47.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Boxplot de tallas medias Cojinoba del Sur') +
+    ylab('Longitud (Cm.)')+
+    xlab('Años')+
+    coord_flip()
+ncs
+```
+
+Con este plot compruebo que son igual a las tallas q no se expandieron.
+
+```{r fig.align="center", fig.width=8, fig.height=6}
+pexpcs <- ggplot(tts, aes(Long)) +
+  geom_histogram(binwidth = 2,  colour = "blue", alpha=0.4) +
+  facet_wrap(.~Year, scales = "free_y", ncol=4) +
+  xlim(10,100)+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()
+pexpcs
+```
+
+```{r fig.width=3, fig.height=4}
+nbco <- ggplot(tts , aes(x=Long, y = as.factor(Year), fill=Sex))  +
+  geom_joy( alpha=0.5) + 
+  #facet_wrap(.~Sex, ncol=5) +   
+  geom_vline(xintercept = 43.3, color = "red")+
+  scale_x_continuous(breaks = seq(from = 10, to = 100, by = 10))+
+  scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
+  scale_fill_brewer(palette = "Spectral")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme_bw()+
+  xlim(20,80)+
+  xlab("Longitud (cm.)")+
+  ylab("")
+  #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
+
+nbco
+```
+
+
+\pagebreak
+
+## Prepara los vectores para sumar a los .dat del modelo si los necesito.
+
+# cojinoba del Sur
+
+```{r}
+tts$cat_long <- as.numeric(as.character(cut(x = tts$Long, breaks = seq(10,108,2), 
+                                                  labels = seq(10,106,2), right = FALSE)))
+ttcs <- table(tts$Year, tts$cat_long)
+
+tail(ttcs, 10)
+
+# A su vez puedo generar el archivo por separado
+write.csv(ttcs, "TALLA_COSUR_2021.csv", sep = ",", row.names = TRUE)
+
+```
+
+
+\pagebreak
+
+## Extraigo datos por recurso
+
+
+### 29 Cojinoba Moteada
+
+Filtro especie y sexos indeterminados
+
+```{r}
+tallacojm <- talla3 %>% 
+  filter(COD_ESPECIE == 29) %>% 
+  filter(SEXO %in% c("1", "2"))
+```
+
+
+
+```{r fig.align="center", fig.width=6, fig.height=5}
+pcs <- ggplot(tallacojm, aes(LONGITUD_MUESTRA, fill=SEXO)) +
+  geom_histogram(binwidth = 3, alpha=0.4) +
+  facet_wrap(.~year, scales = "free_y", ncol=4) +
+  xlim(10,100)+
+  theme_bw()
+pcs + geom_vline(xintercept = 37.5, color = "red")
+```
+
+Estructura de tallas por año por puerto
+```{r fig.height=8,fig.width=9,fig.align="center", warning=FALSE, message=F}
+
+jm <- ggplot(data=tallacojm, aes(x=LONGITUD_MUESTRA, y = as.factor(year)))  +
+  geom_joy(alpha=0.5) + 
+  facet_wrap(~COD_PESQUERIA, ncol=6) +   
+  labs(x="Longitud (mm)", y="Frecuencia absoluta (N?)")+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()+
+  xlim(10,100)+
+  scale_y_discrete((limits = rev(levels(tallabr$year))))+
+  theme(strip.text.x = element_text(size = 10))
+jm
+```
+Otro tema que debo identificar es el componente espacial. Aqui saco las tallas por ID de Cuadricula. Cada cuadricula debe tener un punto georefreenciado que despues puedo pasar a mapas.
+
+
+```{r fig.height=6,fig.width=6,fig.align="center", warning=F, message=F}
+
+jcm <- ggplot(data=tallacojm, aes(x=LONGITUD_MUESTRA, y = as.factor(year)))  +
+  geom_joy(alpha=0.5) + 
+  facet_wrap(~ID_CUADRICULA, ncol=10) +   
+  labs(x="Longitud (Cm)", y="Frecuencia absoluta (N?)")+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()+
+  xlim(10,100)+
+  scale_y_discrete((limits = rev(levels(tallabr$year))))+
+  theme(strip.text.x = element_text(size = 10))
+jcm 
+```
+
+Ahora voy a sacar tallas medias por año y por cuadricula para graficar.
+
+\pagebreak
+
+## Expansión de tallas para todos los registros. Esto demora un poco.
+
+
+Ahora se genera la expansion de tallas a la frecuencia para obtener los vectores por año y por zona.
+
+Identifico las columnas de trabajo. elijo pocas variables para hacer el proceso mas rapido.
+
+```{r}
+
+names(tallacojm)
+dftalla5<-subset(tallacojm,select=c(4,46, 45, 47))
+names(dftalla5)
+dim(dftalla5)
+colnames(dftalla5) <- c( "ANO"  ,   "SEXO",     "TALLA",    "FRECUENCIA")
+dftalla5 <- transform(dftalla5, TALLA = as.numeric(TALLA), 
+               FRECUENCIA = as.numeric(FRECUENCIA))
+dftalla5 <- na.omit(dftalla5)
+dim(dftalla5)
+
+#ver tallas grandes
+# hist y max
+
+```
+
+
+Identifico los puertos de la base
+
+```{r}
+#table(dftalla5$PROC)
+unique(dftalla5$PUERTO_RECALADA)
+```
+
+Ahora una expansión de las tallas
+
+
+```{r}
+#expandir long a fracuencias
+#esto no lo pude hacer para el total dado q es mucha data
+expanav<-dftalla5
+#puerto, ano, long, Frec
+head(expanav)
+
+filas<-nrow(expanav)
+
+aux<-list();auxA<-list();auxB<-list()
+for(i in 1:filas){
+  aux[[i]]<-rep(expanav[i,3],expanav[i,4])
+  auxA[[i]]<-rep(expanav[i,2],expanav[i,4])
+  auxB[[i]]<-rep(expanav[i,1],expanav[i,4])
+  
+}
+
+
+length(aux)
+length(auxA)
+length(auxB)
+#aux<-as.numeric(aux)
+```
+
+```{r}
+Long<-unlist(aux)
+Sex<-unlist(auxA)
+Year<-unlist(auxB)
+#Puerto<-unlist(auxB);Puerto
+ttm<-cbind(Long,Sex, Year)
+colnames(ttm)<-c("Long","Sex", "Year")
+dim(ttm)
+head(ttm)
+ttm <-as.data.frame(ttm)
+ttm$Long <- as.numeric(as.character(ttm$Long))
+ttm$Year <- as.numeric(as.character(ttm$Year))
+glimpse(ttm)
+```
+
+\pagebreak
+
+# Comparaciòn de serie historica de las series
+
+Un boxplot total de tallas medias por años y por puerto
+
+El dataframe de toda la serie con poligonos es *dftalla5*
+
+```{r warning=F, message=F, fig.height=4, fig.width=5}
+pcs <- ggplot(ttm, aes(x=Year, y=Long, group=Year)) + 
+    geom_violin(show.legend = NA)+
+    stat_summary(fun.x=median, geom="point", size=2, color="black")+
+    #scale_fill_viridis_c(alpha=0.6, option = "inferno") +
+    #geom_jitter(size=0.1, alpha=0.01) +
+    facet_wrap(.~Sex, ncol=5)+
+    theme_ipsum() +
+    geom_hline(yintercept = 35.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Tallas medias Cojinoba del Sur') +
+    ylab('Longitud (cm.)')+
+    xlab('')
+pcs
+
+```
+
+Boxplot por todos los años
+
+```{r fig.align="center", fig.height=4, fig.width=3}
+ncs <-ggplot(data=ttm, aes(x=Year, y=Long, group=Year, fill=Year)) +
+    geom_boxplot( show.legend = FALSE) +
+    scale_fill_viridis_c(alpha=0.6) +
+    #geom_jitter(size=0.4, alpha=0.2) +
+    #facet_wrap(.~POLIGONO, ncol = 3)+
+    theme_bw() +
+    geom_hline(yintercept = 47.7, color = "red")+
+    scale_x_continuous(breaks = seq(from = 1996, to = 2020, by = 1))+
+    theme(axis.text.x = element_text(angle = 90, hjust = 2))+
+    ggtitle('Boxplot de tallas medias Cojinoba del Sur') +
+    ylab('Longitud (Cm.)')+
+    xlab('Años')+
+    coord_flip()
+ncs
+```
+
+Con este plot compruebo que son igual a las tallas q no se expandieron.
+
+```{r fig.align="center", fig.width=8, fig.height=6}
+pexpcs <- ggplot(ttm, aes(Long)) +
+  geom_histogram(binwidth = 2,  colour = "blue", alpha=0.4) +
+  facet_wrap(.~Year, scales = "free_y", ncol=4) +
+  xlim(10,100)+
+  geom_vline(xintercept = 47.7, color = "red")+
+  theme_bw()
+pexpcs
+```
+
+```{r fig.width=3, fig.height=4}
+nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
+  geom_joy( alpha=0.5) + 
+  #facet_wrap(.~Sex, ncol=5) +   
+  geom_vline(xintercept = 37.7, color = "red")+
+  scale_x_continuous(breaks = seq(from = 10, to = 100, by = 10))+
+  scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
+  scale_fill_brewer(palette = "Set1")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme_bw()+
+  xlim(25, 70)+
+  xlab("Longitud (cm.)")+
+  ylab("")
+  #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
+
+nbcm
+```
+
+
+\pagebreak
+
+## Prepara los vectores para sumar a los .dat del modelo si los necesito.
+
+# cojinoba del Sur
+
+```{r}
+ttm$cat_long <- as.numeric(as.character(cut(x = ttm$Long, breaks = seq(10,108,2), 
+                                                  labels = seq(10,106,2), right = FALSE)))
+ttcm <- table(ttm$Year, ttm$cat_long)
+
+tail(ttcm, 10)
+
+# A su vez puedo generar el archivo por separado
+write.csv(ttcm, "TALLA_COMO_2021.csv", sep = ",", row.names = TRUE)
+
+```
+
+
+
+
