@@ -30,21 +30,21 @@ Los datos se actualizan año a año y se van estructurando las estructuras de ta
 
 Jessica Santader actualizó los datos de 2021
 
-```{r eval=FALSE}
+```{r eval=T,warning=FALSE,}
 talla <- read_xlsx("LONGITUD2021.xlsx")
 
 #visualizo la estructura y dimension de la base de los datos
 
-head(talla)
-dim(talla)
-names(talla)
-glimpse(talla)
+#head(talla)
+#dim(talla)
+#names(talla)
+#glimpse(talla)
 
 ```
 
 Ahora cambio los formatos de las fechas, el primer analisis es anual, por ende no considero los meses ni años y elijo fecha de zarpe
 
-```{r}
+```{r warning=FALSE}
 realdate <- as.Date(talla$FECHA_HORA_ZARPE, format="%Y-%M-%D")
 
 talladate <- data.frame(FECHA_HORA_ZARPE=realdate)
@@ -53,38 +53,44 @@ month=as.numeric (format(realdate,"%M"))
 day=as.numeric (format(realdate,"%D"))
 
 talla2<-cbind(talladate,day,month,year,talla)
-tail(talla2)
-summary(talla2)
-table(talla2$year)
-table(talla2$FECHA_LANCE)
-glimpse(talla2)
+#tail(talla2)
+#summary(talla2)
+#table(talla2$year)
+#table(talla2$FECHA_LANCE)
+#glimpse(talla2)
 
 ```
 
 Ahora transformo las coordenadas
 
-```{r}
-talla2$LONGITUD
-talla2$LONGITUD/10000
-floor(talla2$LONGITUD/10000)
+```{r warning=FALSE}
+
+#talla2$LONGITUD
+#talla2$LONGITUD/10000
+#floor(talla2$LONGITUD/10000)
+
 gr<-floor(talla2$LONGITUD/10000)
-talla2$LONGITUD-gr*10000
-(talla2$LONGITUD-gr*10000)/100
+#talla2$LONGITUD-gr*10000
+#(talla2$LONGITUD-gr*10000)/100
+
 mn<-(talla2$LONGITUD-gr*10000)/100
-talla2$LONGITUD-gr*10000-mn*100
+#talla2$LONGITUD-gr*10000-mn*100
+
 sg<-talla2$LONGITUD-gr*10000-mn*100
+
 talla2$long<-gr+mn/60+sg/(60*60)
 talla2$long<-talla2$long*-1
+
 long <- talla2$long
 
-talla2$LATITUD
-talla2$LATITUD/10000
-floor(talla2$LATITUD/10000)
+#talla2$LATITUD
+#talla2$LATITUD/10000
+#floor(talla2$LATITUD/10000)
 gr<-floor(talla2$LATITUD/10000)
-talla2$LATITUD-gr*10000
-(talla2$LATITUD-gr*10000)/100
+#talla2$LATITUD-gr*10000
+#(talla2$LATITUD-gr*10000)/100
 mn<-(talla2$LATITUD-gr*10000)/100
-talla2$LATITUD-gr*10000-mn*100
+#talla2$LATITUD-gr*10000-mn*100
 sg<-talla2$LATITUD-gr*10000-mn*100
 talla2$lat<-gr+mn/60+sg/(60*60)
 talla2$lat<-talla2$lat*-1
@@ -92,9 +98,9 @@ lat<- talla2$lat
 
 #junto la data
 talla3<- cbind(talla2, lat, long)
-names(talla3)
-head(talla3)
-glimpse(talla3)
+#names(talla3)
+#head(talla3)
+#glimpse(talla3)
 
 #algo ocurre que debo sacar las 2 ultimas columnas
 
@@ -132,7 +138,7 @@ Nosotros utilizamos el 5 (brotula), 96 (Cojinoba del Sur), 29 (Cojinoba Moteada)
 
 Filtro especie y sexos indeterminados
 
-```{r}
+```{r warning=FALSE}
 tallabr <- talla3 %>% 
   filter(COD_ESPECIE == 5) %>% 
   filter(SEXO %in% c("1", "2")) %>% 
@@ -244,18 +250,21 @@ p1
 ```
 
 
-```{r, fig.width=3, fig.height=4}
-nb2 <- ggplot(tt , aes(x=Long, y = as.factor(Year), colour=Sex, fill=Sex))  +
+```{r tallasBrotula, warning=F, message=F, fig.width=3, fig.height=4}
+
+nb2 <- ggplot(tt , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   geom_joy( alpha=0.5) + 
   #facet_wrap(.~Sex, ncol=5) +   
   geom_vline(xintercept = 47.7, color = "red")+
   scale_x_discrete(breaks = seq(from = 20, to = 90, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  theme_bw()+
+  scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
+  theme_bw(base_size=8)+
   xlim(20,90)+
   xlab("Longitud (cm.)")+
-  ylab("")
+  ylab("")+
+  ggtitle('Brótula')+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),legend.position="none")
   #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
 
 nb2
@@ -530,7 +539,7 @@ pexpcs <- ggplot(tts, aes(Long)) +
 pexpcs
 ```
 
-```{r fig.width=3, fig.height=4}
+```{r tallasCojinobaSur, warning=F, message=F, fig.width=3, fig.height=4}
 nbco <- ggplot(tts , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   geom_joy( alpha=0.5) + 
   #facet_wrap(.~Sex, ncol=5) +   
@@ -538,11 +547,14 @@ nbco <- ggplot(tts , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   scale_x_continuous(breaks = seq(from = 10, to = 100, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_brewer(palette = "Spectral")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  theme_bw()+
+  scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
+  theme_bw(base_size=8)+
   xlim(20,80)+
   xlab("Longitud (cm.)")+
-  ylab("")
+  ylab("")+
+  ggtitle('Cojinoba del Sur')+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),legend.position="none")
+  
   #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
 
 nbco
@@ -761,7 +773,7 @@ pexpcs <- ggplot(ttm, aes(Long)) +
 pexpcs
 ```
 
-```{r fig.width=3, fig.height=4}
+```{r tallasCojinobaMoteada, warning=F, message=F, fig.width=3, fig.height=4}
 nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   geom_joy( alpha=0.5) + 
   #facet_wrap(.~Sex, ncol=5) +   
@@ -769,14 +781,17 @@ nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   scale_x_continuous(breaks = seq(from = 10, to = 100, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_brewer(palette = "Set1")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  theme_bw()+
+  scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
+  theme_bw(base_size=8)+
   xlim(25, 70)+
   xlab("Longitud (cm.)")+
-  ylab("")
+  ylab("")+
+    ggtitle('Cojinoba Moteada')+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
   #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
 
-nbcm
+nbcm 
+
 ```
 
 
