@@ -48,7 +48,11 @@ In this folder you need put two files, .tpl and .dat to run LBPA estimation mode
 
 ```{r echo=FALSE, eval=FALSE}
 rm(list=ls(all=TRUE))  # Borra todas los objetos creados
-setwd('~/IFOP/CBA/BROTULA_COJINOVA/2022/SAM/LBPA')
+#setwd('~/IFOP/CBA/BROTULA_COJINOVA/2022/SAM/LBPA')
+dir<-getwd()
+
+setwd(dir)
+      
 ```
 
 Once you have defined your working directory, you can take a look and check the contains files.
@@ -84,11 +88,13 @@ system('./LBPA')
 To read report (.rep) is necessary to get a function to can read report. This function is hold in the same folder than .tpl and .dat.
 
 ```{r echo=FALSE, eval=TRUE}
-source('~/IFOP/Escritos/LBPA/LBPA_Guide/read.admb.R')
+#source('~/IFOP/Escritos/LBPA/LBPA_Guide/read.admb.R')
+source(paste(getwd(),'/read.admb.R',sep=''))
 ```
 
 ```{r echo=TRUE, eval=FALSE}
 source('~/read.admb.R')
+
 ```
 
 Once run our LBPA model, we can read report with *read.rep()* function.

@@ -3,7 +3,7 @@ title: "Aplicación de Stochastic Production Model in Continuous Time (SPiCT) (P
 author: "Mardones, M., Zúñiga, MJ., Pérez, MC"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
-bibliography: Documents.bib
+#bibliography: Documents.bib
 toc: TRUE
 ---
 
@@ -113,7 +113,9 @@ middle of the year if they are based on yearly aggregated catches and effort.
 
 Leo el directorio donde contengo los datos
 ```{r}
-setwd('~/IFOP/CBA/BROTULA_COJINOVA/2022/SAM')
+#setwd('~/IFOP/CBA/BROTULA_COJINOVA/2022/SAM')
+setwd(getwd())
+
 ```
 
 Usaré el ejemplop de datos de erizo de la zona X Norte. Este ejemplo no tiene mucho contraste de datos y veremos los problemas que ello acarrea.
