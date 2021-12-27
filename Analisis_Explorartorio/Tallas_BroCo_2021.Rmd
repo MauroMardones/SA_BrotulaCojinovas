@@ -259,7 +259,7 @@ nb2 <- ggplot(tt , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   scale_x_discrete(breaks = seq(from = 10, to = 100, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
-  theme_bw(base_size=8)+
+  theme_bw(base_size=10)+
    xlim(10,100)+
   xlab("Longitud (cm.)")+
   ylab("")+
@@ -548,7 +548,7 @@ nbco <- ggplot(tts , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_brewer(palette = "Spectral")+
   scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
-  theme_bw(base_size=8)+
+  theme_bw(base_size=10)+
   xlim(20,80)+
   xlab("Longitud (cm.)")+
   ylab("")+
@@ -773,7 +773,7 @@ pexpcs <- ggplot(ttm, aes(Long)) +
 pexpcs
 ```
 
-```{r tallasCojinobaMoteada, warning=F, message=F, fig.width=7, fig.height=5,fig.path="Figuras/",dev="png"}
+```{r tallasCojinobaMoteada, warning=F, message=F, fig.width=5, fig.height=3,fig.path="Figuras/",dev="pdf"}
 
 library(patchwork) # para unir gráficos de ggplot
 
@@ -785,7 +785,7 @@ nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_brewer(palette = "Set1")+
   scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
-  theme_bw(base_size=8)+
+  theme_bw(base_size=10)+
   xlim(25, 70)+
   xlab("Longitud (cm.)")+
   ylab("")+
