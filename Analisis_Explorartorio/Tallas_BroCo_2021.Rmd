@@ -256,11 +256,11 @@ nb2 <- ggplot(tt , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   geom_joy( alpha=0.5) + 
   #facet_wrap(.~Sex, ncol=5) +   
   geom_vline(xintercept = 47.7, color = "red")+
-  scale_x_discrete(breaks = seq(from = 20, to = 90, by = 10))+
+  scale_x_discrete(breaks = seq(from = 10, to = 100, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
   theme_bw(base_size=8)+
-  xlim(20,90)+
+   xlim(10,100)+
   xlab("Longitud (cm.)")+
   ylab("")+
   ggtitle('Brótula')+
@@ -552,7 +552,7 @@ nbco <- ggplot(tts , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   xlim(20,80)+
   xlab("Longitud (cm.)")+
   ylab("")+
-  ggtitle('Cojinoba del Sur')+
+  ggtitle('Cojinoba del sur')+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),legend.position="none")
   
   #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
@@ -773,12 +773,15 @@ pexpcs <- ggplot(ttm, aes(Long)) +
 pexpcs
 ```
 
-```{r tallasCojinobaMoteada, warning=F, message=F, fig.width=3, fig.height=4}
+```{r tallasCojinobaMoteada, warning=F, message=F, fig.width=7, fig.height=5,fig.path="Figuras/",dev="png"}
+
+library(patchwork) # para unir gráficos de ggplot
+
 nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   geom_joy( alpha=0.5) + 
   #facet_wrap(.~Sex, ncol=5) +   
   geom_vline(xintercept = 37.7, color = "red")+
-  scale_x_continuous(breaks = seq(from = 10, to = 100, by = 10))+
+  scale_x_continuous(breaks = seq(from = 25, to = 75, by = 10))+
   scale_y_discrete(breaks = seq(from = 1997, to = 2021, by = 1))+
   scale_fill_brewer(palette = "Set1")+
   scale_fill_hue(name="Sexo",labels = c("Macho", "Hembra"))+
@@ -786,11 +789,11 @@ nbcm <- ggplot(ttm , aes(x=Long, y = as.factor(Year), fill=Sex))  +
   xlim(25, 70)+
   xlab("Longitud (cm.)")+
   ylab("")+
-    ggtitle('Cojinoba Moteada')+
+    ggtitle('Cojinoba moteada')+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
   #scale_x_discrete((limits = rev(levels(talla2021$ANO_ARR))))+
 
-nbcm 
+ (nb2+nbco+nbcm) 
 
 ```
 
