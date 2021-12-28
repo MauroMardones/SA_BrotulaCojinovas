@@ -9,7 +9,7 @@ rm(list=ls())  # Borra todas los objetos creados
 getwd()
 dir()
 
-data<- read.csv2('Desembarque_5.csv', header = T, sep =',')
+data<- read.csv(paste(getwd(),'/Analisis_Explorartorio/Desembarque_5.csv',sep=""), header = T, sep =';')
 
 head(data)
 tail(data)#llenar con 0 los NA
@@ -45,7 +45,7 @@ b <- ggplot(data,aes(Year,brotula))+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size=10)) +
   theme(axis.text.y = element_text( size=8))+
   scale_x_continuous(breaks = seq(from = 1979, to = 2020, by = 2))+
-  annotate("text", x=2000, y=7000, label= "Brotula", size=10) 
+  annotate("text", x=2000, y=7000, label= "Brótula", size=10) 
 b 
 
 

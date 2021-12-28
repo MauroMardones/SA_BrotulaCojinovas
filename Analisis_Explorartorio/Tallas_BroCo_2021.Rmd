@@ -309,11 +309,15 @@ pexp
 # Brotula
 
 ```{r}
-tt$cat_long <- as.numeric(as.character(cut(x = tt$Long, breaks = seq(10,108,2), 
-                                                  labels = seq(10,106,2), right = FALSE)))
+tt$cat_long <- as.numeric(as.character(cut(x = tt$Long,
+                                           breaks = seq(10,108,2), 
+                                           labels = seq(10,106,2), 
+                                           right = FALSE)))
 ttbro <- table(tt$Year, tt$cat_long)
 
+ttbrosex <- table(tt$Year, tt$Sex)
 tail(ttbro, 10)
+
 
 # A su vez puedo generar el archivo por separado
 write.csv(ttbro, "TALLA_BRO_2021.csv", sep = ",", row.names = TRUE)
@@ -322,6 +326,9 @@ tallabrot <- read.csv2("TALLA_BRO_2021.csv", sep=",")
 
 head(tallabrot)
 tail(tallabrot)
+
+ttbrosex
+
 ```
 
 \pagebreak
@@ -577,6 +584,9 @@ tail(ttcs, 10)
 # A su vez puedo generar el archivo por separado
 write.csv(ttcs, "TALLA_COSUR_2021.csv", sep = ",", row.names = TRUE)
 
+ttcssex <- table(tts$Year, tts$Sex)
+ttcssex
+
 ```
 
 
@@ -813,6 +823,9 @@ tail(ttcm, 10)
 
 # A su vez puedo generar el archivo por separado
 write.csv(ttcm, "TALLA_COMO_2021.csv", sep = ",", row.names = TRUE)
+
+ttcmsex <- table(ttm$Year, ttm$Sex)
+ttcmsex
 
 ```
 
