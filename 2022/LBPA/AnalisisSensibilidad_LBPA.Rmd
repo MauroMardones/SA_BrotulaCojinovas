@@ -34,7 +34,7 @@ data <-read.rep('LBPA.rep')
 dat <- readLines("lbpa.dat",encoding="UTF-8")
 dat2<-dat
 
-M <- c(seq(0.1,0.38,0.02),0.24)
+M <- c(seq(0.1,0.38,0.02),0.40)
 
 par<-as.numeric(strsplit(dat[3],"\t")[[1]])
 par[3]
@@ -73,18 +73,18 @@ kable(tablafin)
 
 ```
 Ahora genero un plot de correlaciòn entre M y F. Si bien hay una dependecia a las variables, es necesario mirar esta data
-```{r fig.height=2, fig.width=4}
+```{r warning=F, message=F,  fig.height=2, fig.width=4}
 tablafin2 <- as.data.frame(tablafin)
 
 cor1 <- ggplot(tablafin2, aes(x=M, y=F_Current)) + 
   geom_point(stat = 'identity' , colour='#fc4e2a', fill='#fc4e2a', alpha=.3, size=2) +
   stat_smooth(method = loess, se = FALSE, span = 0.3)+
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.03))+
-  scale_y_continuous(breaks = seq(from = 1, to = 2, by = 0.01))+
+  scale_y_continuous(breaks = seq(from = 1, to = 3, by = 0.01))+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, hjust = 2))+
   #facet_wrap(.~month, ncol =  5)+
-  ylim(1,2)+
+  ylim(1,2.7)+
   ylab('F actual')+
   xlab('M')
 

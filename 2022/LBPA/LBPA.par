@@ -1,15 +1,15 @@
-# Number of parameters = 5 Objective function value = 30653.8058021715  Maximum gradient component = 1202.76616427181
+# Number of parameters = 5 Objective function value = 30731.3779374555  Maximum gradient component = 7645.33785240646
 # log_Fcr:
-0.750845663270
+0.288045182539
 # log_L50:
-4.00496948089
+3.94519955977
 # log_rango:
-2.11377574400
+1.72003773568
 # log_alfa:
 -6.89780494813
 # log_beta:
 -2.30258509299
 # log_Lo:
-3.48920617898
+3.67618998703
 # log_Ftar:
--0.241186133707
+0.837040984896
