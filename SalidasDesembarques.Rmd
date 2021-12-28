@@ -1,0 +1,83 @@
+---
+title: "Salidas Desembarques"
+output: pdf_document
+---
+
+```{r}
+
+data<- read.csv(paste(getwd(),'/Analisis_Explorartorio/Desembarque_5.csv',sep=""), header = T, sep =';')
+
+head(data)
+tail(data)#llenar con 0 los NA
+
+# data[is.na(data)] <- 0
+# #DESEMBARQUES
+# brotula<-table(data$Brotula, data$Ano, sum)
+# 
+# png(filename = "Desembarques.png",
+#     width =14, height =6, units = "in", res = 300)
+# 
+
+#total <- matriz$X_NOR + matriz$X_SUR + matriz$XI
+
+Year<- data$Ano
+brotula <- data$Brotula
+moteada <- data$Moteada
+delsur <- data$Delsur
+
+
+d<- table(Year, brotula); d
+
+library(ggplot2)
+```
+
+```{r  desembarqueBrotula, warning=F, include=T, message=F, echo=F,fig.height=3,fig.width=4,fig.align="center",fig.path="Figuras/"}
+
+  
+bro <- ggplot(data,aes(Year,brotula))+ geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8500) +   
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  #geom_text(aes(label=brotula), angle=90, vjust=0.5, color="black", size=3.5)+
+  theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size=10)) +
+    theme(axis.text.y = element_text( size=8))+
+    scale_x_continuous(breaks = seq(from = 1979, to = 2021, by = 2))+
+    ggtitle('Brótula')
+bro
+
+```
+
+
+
+```{r  desembarqueMoteada, warning=F, include=T, message=F, echo=F,fig.height=3,fig.width=4,fig.align="center",fig.path="Figuras/"}
+#grafico Moteada
+
+m <- ggplot(data,aes(Year,moteada))+ geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8500) +   
+  xlab("") + 
+  ylab("Desembarque (t.)")+
+  geom_text(aes(label=moteada), angle=90, vjust=0.5, color="black", size=3.5)+
+  theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size=10)) +
+    theme(axis.text.y = element_text( size=8))+
+    scale_x_continuous(breaks = seq(from = 1979, to = 2020, by = 2))+
+  annotate("text", x=2000, y=7000, label= "C. moteada", size=10) 
+m
+```
+
+
+```{r  desembarqueDelSur, warning=F, include=T, message=F, echo=F,fig.height=3,fig.width=4,fig.align="center",fig.path="Figuras/"}
+
+ds <- ggplot(data,aes(Year,delsur))+ geom_bar(stat="identity", fill="gray")+ 
+  ylim(0, 8500) +   xlab("") + ylab("Desembarque (t.)")+
+  geom_text(aes(label=delsur), angle=90, vjust=0.5, color="black", size=3.5)+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size=10)) +
+  theme(axis.text.y = element_text( size=8))+
+  scale_x_continuous(breaks = seq(from = 1979, to = 2020, by = 2))+
+  annotate("text", x=2000, y=7000, label= "C. Delsur", size=10) 
+ds
+
+```
+
