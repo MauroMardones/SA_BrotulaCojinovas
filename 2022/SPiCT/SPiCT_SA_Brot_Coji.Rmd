@@ -135,9 +135,10 @@ bro <- ggplot(brotula,aes(timeC,obsC))+
   ylim(0, 8200) +  
   xlab("") + 
   ylab("Desembarque (t.)")+
+    ggtitle('Brótula')+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_x_continuous(breaks = seq(from = 1978, to = 2021, by = 2))
+  scale_x_continuous(breaks = seq(from = 1978, to = 2022, by = 2))
 bro
 ```
 
@@ -236,7 +237,7 @@ plotspict.fb(resbro2)
 
 
 
-### Cojinoba moteada
+# Cojinoba moteada
 
 Puedo tener un .txt ó un .csv pero deben ser transformados en formato list.
 
@@ -251,9 +252,10 @@ com <- ggplot(cojmo,aes(timeC,obsC))+
   ylim(0, 8200) +  
   xlab("") + 
   ylab("Desembarque (t.)")+
+    ggtitle('Cojinoba moteada')+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_x_continuous(breaks = seq(from = 1978, to = 2021, by = 1))
+  scale_x_continuous(breaks = seq(from = 1978, to = 2022, by = 2))
 com
 ```
 
@@ -287,8 +289,9 @@ plotspict.f(rescojmo)
 
 ```
 
-```{r}
+```{r eval=T, fig.width=3, fig.height=2}
 plotspict.biomass(rescojmo)
+
 plotspict.catch(rescojmo)
 plotspict.f(rescojmo)
 plotspict.diagnostic(rescojmo)
@@ -311,7 +314,7 @@ capture.output(summary(rescojmo))
 
 
 ### Extrear parametros estimados
-```{r}
+```{r eval=T, fig.width=4, fig.height=3}
 rescom1 <- retro(rescojmo, nretroyear = 4)
 plotspict.retro(rescom1)
 ```
