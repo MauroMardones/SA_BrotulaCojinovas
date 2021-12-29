@@ -152,7 +152,7 @@ class(brotula)
 
 Primero un vistazo a mis datos y compruebo el contraste, el que desde tya nos dirá que tan robusta es la estimación
 
-```{r eval=F, fig.width=3, fig.height=3}
+```{r message=F,warning=F, eval=F, fig.width=3, fig.height=3}
 plotspict.data(brotula)
 ```
 
@@ -174,14 +174,24 @@ plot(resbro)
 ```
 
 
-```{r fig.width=4, fig.height=3}
-a <-plotspict.bbmsy(resbro)
+```{r eval=F, fig.width=3, fig.height=2}
+#a <-plotspict.bbmsy(resbro)
 #b <-  plotspict.ffmsy(resbro)
-b<- plotspict.biomass(resbro, ylim=c(0, 500000))
+#b<- plotspict.biomass(resbro, ylim=c(0, 180000))
 #d <-  plotspict.fb(resbro, ylim=c(0, 3), xlim=c(0, 100000))
+#plotspict.production(resbro)
+#c <- plotspict.f(resbro)
+
+ 
+plotspict.biomass(resbro)
+plotspict.catch(resbro)
+plotspict.f(resbro)
+plotspict.diagnostic(resbro)
+plotspict.fb(resbro)
+plotspict.bbmsy(resbro)
 plotspict.production(resbro)
-c <- plotspict.f(resbro)
-a/b/c
+
+
 ```
 #diagnostico y residuos
 
@@ -192,7 +202,7 @@ plotspict.diagnostic(resbrod)
 
 
 ### Extrear parametros estimados
-```{r}
+```{r eval=T, fig.width=4, fig.height=3}
 resbro1 <- retro(resbro, nretroyear = 4)
 plotspict.retro(resbro1)
 ```
